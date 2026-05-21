@@ -8,12 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const dobInput = document.getElementById('dobInput');
     const ageCounter = document.getElementById('ageCounter');
     const decimalsInput = document.getElementById('decimalsInput');
+    const engineInput = document.getElementById('engineInput');
 
     // State
     let birthDate = localStorage.getItem('userDob');
     let userDecimals = parseInt(localStorage.getItem('userDecimals')) || 9;
+    let userEngine = localStorage.getItem('userEngine') || 'google';
     let animationFrameId = null;
     let currentDotCount = -1;
+    
+    // Set initial placeholder
+    updateSearchPlaceholder();
 
     // --- Search functionality & Auto-focus ---
     
@@ -35,11 +40,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') {
             const query = searchInput.value.trim();
             if (query) {
-                // Redirect to Google search
-                window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                let searchUrl = '';
+                switch(userEngine) {
+                    case 'duckduckgo':
+                        searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+                        break;
+                    case 'brave':
+                        searchUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}`;
+                        break;
+                    case 'google':
+                    default:
+                        searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                        break;
+                }
+                window.location.href = searchUrl;
             }
         }
     });
+    
+    function updateSearchPlaceholder() {
+        switch(userEngine) {
+            case 'duckduckgo': searchInput.placeholder = "DuckDuckGo'da ara..."; break;
+            case 'brave': searchInput.placeholder = "Brave Search'te ara..."; break;
+            case 'google':
+            default: searchInput.placeholder = "Google'da ara..."; break;
+        }
+    }
 
     // --- Settings Modal Logic ---
 
@@ -48,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dobInput.value = birthDate;
         }
         decimalsInput.value = userDecimals;
+        engineInput.value = userEngine;
         settingsModal.classList.add('active');
     });
 
@@ -62,12 +89,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dobInput.value) {
             birthDate = dobInput.value;
             userDecimals = parseInt(decimalsInput.value);
+            userEngine = engineInput.value;
+            
             if(isNaN(userDecimals) || userDecimals < 0) userDecimals = 0;
             if(userDecimals > 15) userDecimals = 15;
             
             localStorage.setItem('userDob', birthDate);
             localStorage.setItem('userDecimals', userDecimals);
+            localStorage.setItem('userEngine', userEngine);
             
+            updateSearchPlaceholder();
             settingsModal.classList.remove('active');
             
             // Force re-render of dots if decimals changed because size changes
